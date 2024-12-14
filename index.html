@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spare Parts Management</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link to the external CSS file -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 10px 0;
+        }
+
+        header img {
+            height: 80px;
+        }
+
+        header h1 {
+            margin: 10px 0;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+        }
+
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .container {
+            margin: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .search-container input {
+            width: calc(100% / 10 - 10px);
+            margin: 5px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .edit-button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .edit-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="IMG_5904.png" alt="Company Logo">
+        <h1>Spare Parts Management</h1>
+    </header>
+
+    <div class="button-container">
+        <button class="button" onclick="showGenerateForm()">Generate/Edit Spare Part</button>
+        <button class="button" onclick="showTable()">View/Action Spare Part</button>
+    </div>
+
+    <div class="container" id="generate-form" style="display: none;">
+        <h2>Generate/Edit Spare Part</h2>
+        <form id="generate-form-input" onsubmit="generateSparePart(event)">
+            <input type="text" id="gen-srNo" placeholder="Sr No." required><br>
+            <input type="text" id="gen-equipment" placeholder="Equipment" required><br>
+            <input type="text" id="gen-description" placeholder="Item Description" required><br>
+            <input type="text" id="gen-oemPartNumber" placeholder="OEM Part Number" required><br>
+            <input type="text" id="gen-oem" placeholder="OEM" required><br>
+            <input type="number" id="gen-qty" placeholder="QTY" required><br>
+            <input type="text" id="gen-igtPartNumber" placeholder="IGT Part Number" required><br>
+            <input type="text" id="gen-location" placeholder="Location" required><br>
+            <input type="text" id="gen-subLocation" placeholder="Sub Location" required><br>
+            <input type="text" id="gen-availability" placeholder="Availability" required><br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div class="container" id="table-container" style="display: none;">
+        <h2>View and Search Spare Parts</h2>
+        <div class="search-container">
+            <input type="text" id="search-srNo" placeholder="Search by Sr No." oninput="filterTable()">
+            <input type="text" id="search-equipment" placeholder="Search by Equipment" oninput="filterTable()">
+            <input type="text" id="search-description" placeholder="Search by Item Description" oninput="filterTable()">
+            <input type="text" id="search-oemPartNumber" placeholder="Search by OEM Part Number" oninput="filterTable()">
+            <input type="text" id="search-oem" placeholder="Search by OEM" oninput="filterTable()">
+            <input type="text" id="search-qty" placeholder="Search by QTY" oninput="filterTable()">
+            <input type="text" id="search-igtPartNumber" placeholder="Search by IGT Part Number" oninput="filterTable()">
+            <input type="text" id="search-location" placeholder="Search by Location" oninput="filterTable()">
+            <input type="text" id="search-subLocation" placeholder="Search by Sub Location" oninput="filterTable()">
+            <input type="text" id="search-availability" placeholder="Search by Availability" oninput="filterTable()">
+        </div>
+        <table id="data-table">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Equipment</th>
+                    <th>Item Description</th>
+                    <th>OEM Part Number</th>
+                    <th>OEM</th>
+                    <th>QTY</th>
+                    <th>IGT Part Number</th>
+                    <th>Location</th>
+                    <th>Sub Location</th>
+                    <th>Availability</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table content will be dynamically populated -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let sparePartsData = [];
+
+        function showGenerateForm() {
+            document.getElementById('generate-form').style.display = 'block';
+            document.getElementById('table-container').style.display = 'none';
+        }
+
+        function showTable() {
+            document.getElementById('generate-form').style.display = 'none';
+            document.getElementById('table-container').style.display = 'block';
+            fetchSparePartsData();
+        }
+
+        async function fetchSparePartsData() {
+            try {
+                const response = await fetch('spare_parts1.json');
+                sparePartsData = await response.json();
+                displayTable(sparePartsData);
+            } catch (error) {
+                alert('Failed to fetch data. Please ensure spare_parts1.json is available.');
+            }
+        }
+
+        function displayTable(data) {
+            const tableBody = document.querySelector('#data-table tbody');
+            tableBody.innerHTML = '';
+            data.forEach((item, index) => {
+                const row = `
+                    <tr>
+                        <td>${item['Sr No.']}</td>
+                        <td>${item['Equipment']}</td>
+                        <td>${item['Item Description']}</td>
+                        <td>${item['OEM Part Number']}</td>
+                        <td>${item['OEM']}</td>
+                        <td>${item['QTY']}</td>
+                        <td>${item['IGT PART NUMBER']}</td>
+                        <td>${item['LOCATION']}</td>
+                        <td>${item[' SUB LOCATION']}</td>
+                        <td>${item['Availability']}</td>
+                        <td><button class="edit-button" onclick="editPart(${index})">Edit</button></td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        function filterTable() {
+            const query = {
+                'Sr No.': document.getElementById('search-srNo').value.toLowerCase(),
+                'Equipment': document.getElementById('search-equipment').value.toLowerCase(),
+                'Item Description': document.getElementById('search-description').value.toLowerCase(),
+                'OEM Part Number': document.getElementById('search-oemPartNumber').value.toLowerCase(),
+                'OEM': document.getElementById('search-oem').value.toLowerCase(),
+                'QTY': document.getElementById('search-qty').value.toLowerCase(),
+                'IGT PART NUMBER': document.getElementById('search-igtPartNumber').value.toLowerCase(),
+                'LOCATION': document.getElementById('search-location').value.toLowerCase(),
+                ' SUB LOCATION': document.getElementById('search-subLocation').value.toLowerCase(),
+                'Availability': document.getElementById('search-availability').value.toLowerCase(),
+            };
+
+            const filteredData = sparePartsData.filter(item =>
+                Object.keys(query).every(key =>
+                    (item[key] || '').toLowerCase().includes(query[key])
+                )
+            );
+            displayTable(filteredData);
+        }
+
+        function editPart(index) {
+            const part = sparePartsData[index];
+            document.getElementById('generate-form').style.display = 'block';
+            document.getElementById('table-container').style.display = 'none';
+
+            document.getElementById('gen-srNo').value = part['Sr No.'];
+            document.getElementById('gen-equipment').value = part['Equipment'];
+            document.getElementById('gen-description').value = part['Item Description'];
+            document.getElementById('gen-oemPartNumber').value = part['OEM Part Number'];
+            document.getElementById('gen-oem').value = part['OEM'];
+            document.getElementById('gen-qty').value = part['QTY'];
+            document.getElementById('gen-igtPartNumber').value = part['IGT PART NUMBER'];
+            document.getElementById('gen-location').value = part['LOCATION'];
+            document.getElementById('gen-subLocation').value = part[' SUB LOCATION'];
+            document.getElementById('gen-availability').value = part['Availability'];
+        }
+
+        function generateSparePart(event) {
+            event.preventDefault();
+            const newPart = {
+                'Sr No.': document.getElementById('gen-srNo').value,
+                'Equipment': document.getElementById('gen-equipment').value,
+                'Item Description': document.getElementById('gen-description').value,
+                'OEM Part Number': document.getElementById('gen-oemPartNumber').value,
+                'OEM': document.getElementById('gen-oem').value,
+                'QTY': document.getElementById('gen-qty').value,
+                'IGT PART NUMBER': document.getElementById('gen-igtPartNumber').value,
+                'LOCATION': document.getElementById('gen-location').value,
+                ' SUB LOCATION': document.getElementById('gen-subLocation').value,
+                'Availability': document.getElementById('gen-availability').value,
+            };
+            sparePartsData.push(newPart);
+            displayTable(sparePartsData);
+            document.getElementById('generate-form').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
